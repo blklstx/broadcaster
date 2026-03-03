@@ -1,2 +1,4 @@
-.env            # Environment variables for the broadcaster. This file should be kept secret and not committed to version control.
-!.example   # Ignore the .env file containing secrets, but keep the example file for reference.
+
+# Ignore all .env files except example
+*.env
+!*.env.example
