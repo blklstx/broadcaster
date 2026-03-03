@@ -29,10 +29,10 @@ GAIN_DB="${GAIN_DB:-6dB}" # e.g. "6dB", "9dB", "12dB", etc. Adjust based on your
 LIMITER="${LIMITER:-}" # for very low latency, you can try removing the limiter and just use a fixed gain, but be careful with clipping. If you have enough headroom in your input levels, you can also keep the limiter for safety and set a higher gain (e.g. 9dB or 12dB) to get more volume without clipping.
 
 # ---- Start detection (local input) ----
-ACTIVE_THRESHOLD_DB="${ACTIVE_THRESHOLD_DB:-$-45}"        # start if local max_volume > this
+ACTIVE_THRESHOLD_DB="${ACTIVE_THRESHOLD_DB:--45}"        # start if local max_volume > this
 
 # ---- Stop detection (public stream silence) ----
-REMOTE_SILENCE_THRESHOLD_DB="${REMOTE_SILENCE_THRESHOLD_DB:-$-55}"   # if public stream max_volume <= this => "silent"
+REMOTE_SILENCE_THRESHOLD_DB="${REMOTE_SILENCE_THRESHOLD_DB:--55}"   # if public stream max_volume <= this => "silent"
 CHECK_EVERY_SECONDS="${CHECK_EVERY_SECONDS:-60}"
 STOP_AFTER_SILENCE_MINUTES="${STOP_AFTER_SILENCE_MINUTES:-5}"
 
@@ -82,7 +82,7 @@ is_running() {
   kill -0 "$ffpid" 2>/dev/null
 }
 
-stop() {
+broadcaster_stop() {
   if [[ ! -f "$PIDFILE" ]]; then
     return 0
   fi
@@ -104,12 +104,12 @@ stop() {
 
 cleanup() {
   log "Exiting..."
-  stop
+  broadcaster_stop
   exit 0
 }
 trap cleanup INT TERM
 
-start() {
+broadcaster_start() {
   if is_running; then
     local ffpid
     ffpid="$(read_pid)" || true
@@ -186,7 +186,7 @@ while true; do
       log "Remote silence minute ${silence_minutes}/${STOP_AFTER_SILENCE_MINUTES}"
       if (( silence_minutes >= STOP_AFTER_SILENCE_MINUTES )); then
         log "Remote silent for ${STOP_AFTER_SILENCE_MINUTES} minutes -> stopping stream."
-        stop
+        broadcaster_stop
         silence_minutes=0
       fi
     else
@@ -205,10 +205,12 @@ while true; do
     continue
   fi
 
-  log "Local max_volume: ${lmax} dB"
   is_active="$(awk -v r="$lmax" -v t="$ACTIVE_THRESHOLD_DB" 'BEGIN{print (r>t) ? 1 : 0}')"
+  
+  log "Local max_volume: ${lmax} dB -> active: ${is_active}"
+
   if [[ "$is_active" == "1" ]]; then
-    start
+    broadcaster_start
   fi
 
   sleep "$CHECK_EVERY_SECONDS"
