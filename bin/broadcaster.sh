@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # ---- URLs ----
-PUBLIC_STREAM_URL="${PUBLIC_STREAM_URL:-http://live.blklst.fi:8000/blklistlive.mp3}"
-ICECAST_URL="${ICECAST_URL:-icecast://source:blklst@live.blklst.fi:8000/blklistlive.mp3}"
+PUBLIC_STREAM_URL="${PUBLIC_STREAM_URL:-}"
+ICECAST_URL="${ICECAST_URL:-}"
 
 # ---- Discord ----
 DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"  # recommend: export in env or systemd EnvironmentFile
